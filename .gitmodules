@@ -1,0 +1,3 @@
+[submodule "offlinecap-scribe/src/main/cpp/whisper"]
+	path = offlinecap-scribe/src/main/cpp/whisper
+	url = https://github.com/ggerganov/whisper.cpp.git

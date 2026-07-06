@@ -1,0 +1,34 @@
+name: Build
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ "**" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Read NDK version
+        id: ndk
+        run: echo "version=$(grep '^ndk = ' gradle/libs.versions.toml | sed -E 's/.*"(.+)".*/\1/')" >> "$GITHUB_OUTPUT"
+
+      - name: Install NDK
+        # offlinecap-scribe builds whisper.cpp via CMake/NDK; the pinned version isn't
+        # preinstalled on the runner's Android SDK image.
+        run: sdkmanager --install "ndk;${{ steps.ndk.outputs.version }}"
+
+      - name: Build with Gradle
+        run: ./gradlew build spotlessCheck
