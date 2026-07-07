@@ -4,6 +4,7 @@ import io.github.alirezajavan.offlinecap.core.lang.LanguageTag
 import io.github.alirezajavan.offlinecap.core.model.ModelState
 import io.github.alirezajavan.offlinecap.core.model.WhisperModel
 import io.github.alirezajavan.offlinecap.lingua.MlKitTranslationEngine
+import io.github.alirezajavan.offlinecap.transcribe.WhisperModelRepository
 import kotlinx.coroutines.flow.Flow
 
 /**

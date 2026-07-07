@@ -1,4 +1,4 @@
-package io.github.alirezajavan.offlinecap.core.subtitle
+package io.github.alirezajavan.offlinecap.subtitle
 
 import io.github.alirezajavan.offlinecap.core.model.SubtitleCue
 
@@ -6,15 +6,15 @@ import io.github.alirezajavan.offlinecap.core.model.SubtitleCue
  * Utility for merging raw ASR segments into readable subtitle cues.
  */
 public object CueMerger {
-    private const val MAX_CHARS_PER_LINE = 42
-    private const val MAX_LINES = 2
-    private const val MAX_CUE_CHARS = MAX_CHARS_PER_LINE * MAX_LINES
-
     /**
-     * Merges segments based on character count and line limits.
+     * Merges segments based on [options]' character count and line limits.
      */
-    public fun merge(rawSegments: List<SubtitleCue>): List<SubtitleCue> {
+    public fun merge(
+        rawSegments: List<SubtitleCue>,
+        options: CueMergeOptions = CueMergeOptions(),
+    ): List<SubtitleCue> {
         if (rawSegments.isEmpty()) return emptyList()
+        val maxCueChars = options.maxCharsPerLine * options.maxLines
 
         val mergedCues = mutableListOf<SubtitleCue>()
         var currentText = StringBuilder()
@@ -24,7 +24,7 @@ public object CueMerger {
         rawSegments.forEach { segment ->
             val nextText = if (currentText.isEmpty()) segment.text.trim() else "$currentText ${segment.text.trim()}"
 
-            if (nextText.length > MAX_CUE_CHARS) {
+            if (nextText.length > maxCueChars) {
                 // Emit current
                 mergedCues.add(SubtitleCue(currentIndex++, currentStart, segment.startMs, currentText.toString()))
                 currentText = StringBuilder(segment.text.trim())

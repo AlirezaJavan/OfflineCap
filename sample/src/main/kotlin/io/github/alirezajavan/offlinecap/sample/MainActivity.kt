@@ -24,25 +24,36 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import io.github.alirezajavan.offlinecap.core.lang.LanguageTag
 import io.github.alirezajavan.offlinecap.core.model.ModelState
 import io.github.alirezajavan.offlinecap.core.model.SubtitleCue
 import io.github.alirezajavan.offlinecap.core.model.WhisperModel
@@ -63,9 +74,49 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+private enum class SampleTab(
+    val label: String,
+) {
+    CAPTION("Caption"),
+    MODULES("Modules"),
+}
+
 @Suppress("ktlint:standard:function-naming")
 @Composable
-fun SampleApp(viewModel: CaptionViewModel = viewModel()) {
+fun SampleApp() {
+    var selectedTab by remember { mutableStateOf(SampleTab.CAPTION) }
+
+    Scaffold(
+        bottomBar = {
+            NavigationBar {
+                NavigationBarItem(
+                    selected = selectedTab == SampleTab.CAPTION,
+                    onClick = { selectedTab = SampleTab.CAPTION },
+                    icon = { Icon(Icons.Filled.PlayArrow, contentDescription = null) },
+                    label = { Text("Caption") },
+                )
+                NavigationBarItem(
+                    selected = selectedTab == SampleTab.MODULES,
+                    onClick = { selectedTab = SampleTab.MODULES },
+                    icon = { Icon(Icons.Filled.Build, contentDescription = null) },
+                    label = { Text("Modules") },
+                )
+            }
+        },
+    ) { padding ->
+        when (selectedTab) {
+            SampleTab.CAPTION -> CaptionScreen(modifier = Modifier.padding(padding))
+            SampleTab.MODULES -> ModulesScreen(modifier = Modifier.padding(padding))
+        }
+    }
+}
+
+@Suppress("ktlint:standard:function-naming")
+@Composable
+private fun CaptionScreen(
+    modifier: Modifier = Modifier,
+    viewModel: CaptionViewModel = viewModel(),
+) {
     val uiState by viewModel.uiState.collectAsState()
     val pickVideoLauncher =
         rememberLauncherForActivityResult(
@@ -82,7 +133,7 @@ fun SampleApp(viewModel: CaptionViewModel = viewModel()) {
 
     LazyColumn(
         modifier =
-            Modifier
+            modifier
                 .fillMaxSize()
                 .statusBarsPadding()
                 .padding(horizontal = 16.dp),
@@ -94,6 +145,13 @@ fun SampleApp(viewModel: CaptionViewModel = viewModel()) {
                 uiState = uiState,
                 onSelectModel = viewModel::setModel,
                 onDownload = viewModel::downloadModel,
+            )
+        }
+        item {
+            TranslationCard(
+                targetLanguage = uiState.targetLanguage,
+                enabled = !uiState.isProcessing,
+                onSelectTargetLanguage = viewModel::setTargetLanguage,
             )
         }
         item {
@@ -111,17 +169,67 @@ fun SampleApp(viewModel: CaptionViewModel = viewModel()) {
             item { ProgressCard(uiState) }
         }
         if (uiState.cues.isNotEmpty()) {
-            item { TranscriptCard(uiState.cues) }
+            item { TranscriptCard(title = "Transcript", cues = uiState.cues) }
+        }
+        if (uiState.translatedCues.isNotEmpty()) {
+            item { TranscriptCard(title = "Translated", cues = uiState.translatedCues) }
         }
         uiState.subtitleContent?.let { content ->
             item {
                 SubtitleCard(
                     subtitleContent = content,
+                    language = uiState.targetLanguage,
                     onExport = { saveSrtLauncher.launch("captions.srt") },
                 )
             }
         }
         item { Spacer(modifier = Modifier.height(16.dp)) }
+    }
+}
+
+private data class TargetLanguageOption(
+    val label: String,
+    val language: LanguageTag?,
+)
+
+private val TARGET_LANGUAGE_OPTIONS =
+    listOf(
+        TargetLanguageOption("None", null),
+        TargetLanguageOption("Persian", LanguageTag("fa")),
+        TargetLanguageOption("Spanish", LanguageTag("es")),
+        TargetLanguageOption("French", LanguageTag("fr")),
+        TargetLanguageOption("German", LanguageTag("de")),
+        TargetLanguageOption("Japanese", LanguageTag("ja")),
+    )
+
+@Suppress("ktlint:standard:function-naming")
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun TranslationCard(
+    targetLanguage: LanguageTag?,
+    enabled: Boolean,
+    onSelectTargetLanguage: (LanguageTag?) -> Unit,
+) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(text = "Translation (ML Kit)", style = MaterialTheme.typography.titleMedium)
+            Text(
+                text = "Optional: translate the transcript on-device after transcription.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                TARGET_LANGUAGE_OPTIONS.forEach { option ->
+                    FilterChip(
+                        selected = targetLanguage == option.language,
+                        onClick = { onSelectTargetLanguage(option.language) },
+                        enabled = enabled,
+                        label = { Text(option.label) },
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -365,10 +473,13 @@ private fun LabelledProgress(
 
 @Suppress("ktlint:standard:function-naming")
 @Composable
-private fun TranscriptCard(cues: List<SubtitleCue>) {
+private fun TranscriptCard(
+    title: String,
+    cues: List<SubtitleCue>,
+) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = "Transcript (${cues.size} segments)", style = MaterialTheme.typography.titleMedium)
+            Text(text = "$title (${cues.size} segments)", style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.height(8.dp))
             LazyColumn(modifier = Modifier.height(260.dp)) {
                 items(cues) { cue ->
@@ -391,6 +502,7 @@ private fun TranscriptCard(cues: List<SubtitleCue>) {
 @Composable
 private fun SubtitleCard(
     subtitleContent: String,
+    language: LanguageTag?,
     onExport: () -> Unit,
 ) {
     Card(
@@ -398,7 +510,8 @@ private fun SubtitleCard(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = "Subtitles (SRT)", style = MaterialTheme.typography.titleMedium)
+            val title = if (language != null) "Subtitles (SRT · $language)" else "Subtitles (SRT)"
+            Text(text = title, style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.height(8.dp))
             Column(
                 modifier =

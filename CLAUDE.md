@@ -8,15 +8,26 @@ Offline video captioning **library** for Android: video → audio extraction (Me
 
 | Module | Type | Role |
 |---|---|---|
-| `:offlinecap-core` | Kotlin/JVM (no Android!) | Domain models, engine interfaces, subtitle writers, language mapping, `CaptionPipeline` orchestrator |
-| `:offlinecap-audio` | Android lib | `MediaCodecAudioDecoder` → 16 kHz mono float PCM windows |
-| `:offlinecap-scribe` | Android lib + NDK | whisper.cpp JNI, `WhisperTranscriptionEngine` |
+| `:offlinecap-core` | Kotlin/JVM (no Android!) | Domain models, engine interfaces (incl. `SubtitleFormatter`), language mapping, `CaptionPipeline` orchestrator |
+| `:offlinecap-audio` | Android lib | Audio extractor: `MediaCodecAudioDecoder` → 16 kHz mono float PCM windows. Standalone-usable. |
+| `:offlinecap-scribe` | Android lib + NDK | whisper.cpp JNI, `WhisperTranscriptionEngine` — low-level engine, wrapped by `:offlinecap-transcribe` |
+| `:offlinecap-transcribe` | Android lib | Audio → Transcript: `AudioTranscriber` (wraps `WhisperTranscriptionEngine` + `WhisperModelRepository`, the whisper model catalog/downloader). Standalone-usable. |
+| `:offlinecap-subtitle` | Kotlin/JVM (no Android!) | Transcript → Subtitle: `SubtitleGenerator` (cue merging via `CueMergeOptions` + SRT/WebVTT writers). Standalone-usable. |
 | `:offlinecap-lingua` | Android lib | ML Kit Translate, `MlKitTranslationEngine` |
-| `:offlinecap` | Android lib | Public facade (`OfflineCap`, `ModelManager`), whisper model downloader; the one artifact consumers add |
+| `:offlinecap` | Android lib | Public facade (`OfflineCap`, `ModelManager`) composing all of the above; the one artifact for full video → subtitle |
 | `:sample` | Android app | Compose demo; depends only on `:offlinecap` |
 | `build-logic` | included build | Convention plugins (`offlinecap.kotlin.jvm`, `offlinecap.android.library`, `offlinecap.android.application`, `offlinecap.android.compose`, `offlinecap.publish`) |
 
-Dependency rule: engines depend on core via `api`; core depends on nothing Android. Never add an `androidx`/`com.android` dependency to `:offlinecap-core`.
+Dependency rule: engines depend on core via `api`; core depends on nothing Android. Never add an `androidx`/`com.android` dependency to `:offlinecap-core` or `:offlinecap-subtitle`.
+
+**Versioning:** every publishable module has its own `VERSION_<MODULE_NAME>` entry in root
+`gradle.properties` (e.g. `:offlinecap-core` → `VERSION_OFFLINECAP_CORE`), derived automatically
+from the Gradle project name by `PublishConventionPlugin` — no per-module `build.gradle.kts` edits
+needed. `VERSION_NAME` is only a fallback default for a module that doesn't have its own entry yet
+(e.g. right after scaffolding it). **When a module's files change, bump only that module's
+`VERSION_<MODULE_NAME>`** — leave every other module's version untouched, even if it's a
+dependency of the one that changed (consumers pin the exact version they need via Gradle
+coordinates; they don't need to re-pull an unchanged transitive dependency).
 
 ## Build & Verify
 

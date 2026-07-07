@@ -1,15 +1,17 @@
-package io.github.alirezajavan.offlinecap.core.subtitle
+package io.github.alirezajavan.offlinecap.subtitle
 
 import io.github.alirezajavan.offlinecap.core.model.Transcript
+import io.github.alirezajavan.offlinecap.core.subtitle.SubtitleWriter
 
 /**
- * WebVTT subtitle writer.
+ * SubRip (SRT) subtitle writer.
  */
-internal class WebVttWriter : SubtitleWriter {
+internal class SrtWriter : SubtitleWriter {
     override fun write(transcript: Transcript): String =
         buildString {
-            append("WEBVTT\n\n")
-            transcript.cues.forEach { cue ->
+            transcript.cues.forEachIndexed { index, cue ->
+                append(index + 1)
+                append("\n")
                 append(formatTimestamp(cue.startMs))
                 append(" --> ")
                 append(formatTimestamp(cue.endMs))
@@ -24,6 +26,6 @@ internal class WebVttWriter : SubtitleWriter {
         val minutes = (ms % 3_600_000) / 60_000
         val seconds = (ms % 60_000) / 1_000
         val milliseconds = ms % 1_000
-        return "%02d:%02d:%02d.%03d".format(hours, minutes, seconds, milliseconds)
+        return "%02d:%02d:%02d,%03d".format(hours, minutes, seconds, milliseconds)
     }
 }

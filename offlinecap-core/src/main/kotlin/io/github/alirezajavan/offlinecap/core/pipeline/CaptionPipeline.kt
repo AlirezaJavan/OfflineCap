@@ -1,6 +1,7 @@
 package io.github.alirezajavan.offlinecap.core.pipeline
 
 import io.github.alirezajavan.offlinecap.core.engine.AudioDecoder
+import io.github.alirezajavan.offlinecap.core.engine.SubtitleFormatter
 import io.github.alirezajavan.offlinecap.core.engine.TranscriptionEngine
 import io.github.alirezajavan.offlinecap.core.engine.TranscriptionEvent
 import io.github.alirezajavan.offlinecap.core.engine.TranslationEngine
@@ -12,8 +13,6 @@ import io.github.alirezajavan.offlinecap.core.model.CaptionResult
 import io.github.alirezajavan.offlinecap.core.model.PcmSpec
 import io.github.alirezajavan.offlinecap.core.model.SubtitleCue
 import io.github.alirezajavan.offlinecap.core.model.Transcript
-import io.github.alirezajavan.offlinecap.core.subtitle.CueMerger
-import io.github.alirezajavan.offlinecap.core.subtitle.SubtitleWriter
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.channelFlow
@@ -23,6 +22,7 @@ public class CaptionPipeline(
     private val audioDecoder: AudioDecoder,
     private val transcriptionEngine: TranscriptionEngine,
     private val translationEngine: TranslationEngine,
+    private val subtitleFormatter: SubtitleFormatter,
 ) {
     public fun execute(request: CaptionRequest): Flow<CaptionEvent> =
         channelFlow {
@@ -62,7 +62,7 @@ public class CaptionPipeline(
 
                 val sourceTranscript =
                     Transcript(
-                        cues = CueMerger.merge(rawCues),
+                        cues = subtitleFormatter.mergeCues(rawCues),
                         language = detectedLanguage ?: LanguageTag("en"),
                     )
 
@@ -89,8 +89,7 @@ public class CaptionPipeline(
                     }
 
                 // 4. Format Output
-                val writer = SubtitleWriter.forFormat(request.format)
-                val subtitleContent = writer.write(finalTranscript ?: sourceTranscript)
+                val subtitleContent = subtitleFormatter.format(finalTranscript ?: sourceTranscript, request.format)
 
                 send(
                     CaptionEvent.Completed(
