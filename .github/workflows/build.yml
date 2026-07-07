@@ -28,7 +28,7 @@ jobs:
       - name: Install NDK
         # offlinecap-scribe builds whisper.cpp via CMake/NDK; the pinned version isn't
         # preinstalled on the runner's Android SDK image.
-        run: sdkmanager --install "ndk;${{ steps.ndk.outputs.version }}"
+        run: yes | ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --install "ndk;${{ steps.ndk.outputs.version }}"
 
       - name: Build with Gradle
         run: ./gradlew build spotlessCheck
