@@ -30,6 +30,8 @@ rootProject.name = "OfflineCap"
 include(":offlinecap-core")
 include(":offlinecap-audio")
 include(":offlinecap-scribe")
+include(":offlinecap-transcribe")
+include(":offlinecap-subtitle")
 include(":offlinecap-lingua")
 include(":offlinecap")
 include(":sample")

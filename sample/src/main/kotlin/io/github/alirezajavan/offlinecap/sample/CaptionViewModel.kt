@@ -30,10 +30,12 @@ data class UiState(
     val whisperModel: WhisperModel = WhisperModel.TINY,
     val activeModel: WhisperModel? = null,
     val modelState: ModelState = ModelState.Missing,
+    val targetLanguage: LanguageTag? = null,
     val stage: CaptionStage = CaptionStage.IDLE,
     val extractionProgress: Float = 0f,
     val transcriptionProgress: Float = 0f,
     val cues: List<SubtitleCue> = emptyList(),
+    val translatedCues: List<SubtitleCue> = emptyList(),
     val subtitleContent: String? = null,
     val errorMessage: String? = null,
     val isProcessing: Boolean = false,
@@ -83,6 +85,10 @@ class CaptionViewModel(
         observeModelState()
     }
 
+    fun setTargetLanguage(language: LanguageTag?) {
+        _uiState.value = _uiState.value.copy(targetLanguage = language)
+    }
+
     fun downloadModel() {
         viewModelScope.launch {
             offlineCap.models.download(_uiState.value.whisperModel).collect { state ->
@@ -105,12 +111,18 @@ class CaptionViewModel(
                         whisperModel = model,
                         activeModel = model,
                         modelState = _uiState.value.modelState,
+                        targetLanguage = _uiState.value.targetLanguage,
                         stage = CaptionStage.EXTRACTING,
                         isProcessing = true,
                     )
                 startEtaTicker()
                 // Passing the language explicitly skips whisper's auto-detect pass (~seconds).
-                val request = CaptionRequest(videoUri = videoUri, sourceLanguage = LanguageTag("en"))
+                val request =
+                    CaptionRequest(
+                        videoUri = videoUri,
+                        sourceLanguage = LanguageTag("en"),
+                        targetLanguage = _uiState.value.targetLanguage,
+                    )
                 offlineCap.caption(request).collect { event ->
                     logEvent(event)
                     _uiState.value = reduce(_uiState.value, event)
@@ -157,6 +169,10 @@ class CaptionViewModel(
                     stage = CaptionStage.COMPLETED,
                     extractionProgress = 1f,
                     transcriptionProgress = 1f,
+                    translatedCues =
+                        event.result.translatedTranscript
+                            ?.cues
+                            .orEmpty(),
                     subtitleContent = event.result.subtitleContent,
                 )
             is CaptionEvent.Failed ->

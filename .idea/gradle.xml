@@ -28,6 +28,8 @@
             <option value="$PROJECT_DIR$/offlinecap-core" />
             <option value="$PROJECT_DIR$/offlinecap-lingua" />
             <option value="$PROJECT_DIR$/offlinecap-scribe" />
+            <option value="$PROJECT_DIR$/offlinecap-subtitle" />
+            <option value="$PROJECT_DIR$/offlinecap-transcribe" />
             <option value="$PROJECT_DIR$/sample" />
           </set>
         </option>

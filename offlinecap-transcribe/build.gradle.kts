@@ -4,34 +4,31 @@ plugins {
 }
 
 android {
-    namespace = "io.github.alirezajavan.offlinecap"
+    namespace = "io.github.alirezajavan.offlinecap.transcribe"
 }
 
 dependencies {
     api(project(":offlinecap-core"))
-    api(project(":offlinecap-audio"))
     api(project(":offlinecap-scribe"))
-    api(project(":offlinecap-transcribe"))
-    api(project(":offlinecap-subtitle"))
-    api(project(":offlinecap-lingua"))
-
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.okhttp)
 
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.truth)
     testImplementation(libs.mockk)
     testImplementation(libs.turbine)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.okhttp.mockwebserver)
     testRuntimeOnly(libs.junit.launcher)
 
-    // Test fixtures for integration tests
-    testImplementation(testFixtures(project(":offlinecap-core")))
+    androidTestImplementation(libs.truth)
+    androidTestImplementation(libs.kotlinx.coroutines.test)
 }
 
 mavenPublishing {
     pom {
-        name.set("OfflineCap")
-        description.set("Full offline video captioning library for Android")
+        name.set("OfflineCap Transcribe")
+        description.set("Audio-to-transcript speech recognition with model download management for OfflineCap")
     }
 }

@@ -13,7 +13,8 @@ import io.github.alirezajavan.offlinecap.core.model.WhisperModel
 import io.github.alirezajavan.offlinecap.core.pipeline.CaptionPipeline
 import io.github.alirezajavan.offlinecap.lingua.MlKitTranslationEngine
 import io.github.alirezajavan.offlinecap.scribe.WhisperDecodeOptions
-import io.github.alirezajavan.offlinecap.scribe.WhisperTranscriptionEngine
+import io.github.alirezajavan.offlinecap.subtitle.SubtitleGenerator
+import io.github.alirezajavan.offlinecap.transcribe.AudioTranscriber
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
@@ -50,6 +51,7 @@ public class OfflineCap internal constructor(
                     audioDecoder = audioDecoder,
                     transcriptionEngine = transcriptionEngine,
                     translationEngine = translationEngine,
+                    subtitleFormatter = SubtitleGenerator(),
                 )
 
             pipeline.execute(request).collect { emit(it) }
@@ -81,15 +83,14 @@ public class OfflineCap internal constructor(
 
         public fun build(): OfflineCap {
             val audioDecoder = MediaCodecAudioDecoder(context)
-            val transcriptionEngine = WhisperTranscriptionEngine(decodeOptions)
+            val audioTranscriber = AudioTranscriber.Builder(context).transcriptionOptions(decodeOptions).build()
             val translationEngine = MlKitTranslationEngine()
-            val whisperRepository = WhisperModelRepository(context)
 
             return OfflineCap(
                 audioDecoder = audioDecoder,
-                transcriptionEngine = transcriptionEngine,
+                transcriptionEngine = audioTranscriber,
                 translationEngine = translationEngine,
-                models = ModelManager(whisperRepository, translationEngine),
+                models = ModelManager(audioTranscriber.models, translationEngine),
                 whisperModel = whisperModel,
             )
         }

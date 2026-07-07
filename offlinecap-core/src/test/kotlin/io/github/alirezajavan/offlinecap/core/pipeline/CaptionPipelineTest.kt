@@ -3,6 +3,7 @@ package io.github.alirezajavan.offlinecap.core.pipeline
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import io.github.alirezajavan.offlinecap.core.engine.FakeAudioDecoder
+import io.github.alirezajavan.offlinecap.core.engine.FakeSubtitleFormatter
 import io.github.alirezajavan.offlinecap.core.engine.FakeTranscriptionEngine
 import io.github.alirezajavan.offlinecap.core.engine.FakeTranslationEngine
 import io.github.alirezajavan.offlinecap.core.lang.LanguageTag
@@ -23,7 +24,8 @@ class CaptionPipelineTest {
                 )
             val translationEngine = FakeTranslationEngine()
 
-            val pipeline = CaptionPipeline(audioDecoder, transcriptionEngine, translationEngine)
+            val pipeline =
+                CaptionPipeline(audioDecoder, transcriptionEngine, translationEngine, FakeSubtitleFormatter())
             val request =
                 CaptionRequest(
                     videoUri = "content://media/1",

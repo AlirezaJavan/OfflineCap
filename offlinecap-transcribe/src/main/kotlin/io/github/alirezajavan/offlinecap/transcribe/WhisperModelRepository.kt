@@ -1,4 +1,4 @@
-package io.github.alirezajavan.offlinecap
+package io.github.alirezajavan.offlinecap.transcribe
 
 import android.content.Context
 import io.github.alirezajavan.offlinecap.core.engine.ModelRepository
