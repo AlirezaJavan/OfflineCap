@@ -2,7 +2,7 @@
 
 Offline video captioning **library** for Android: video → audio extraction (MediaCodec) → on-device speech-to-text (whisper.cpp/JNI) → on-device translation (ML Kit) → SRT/WebVTT. Fully offline at runtime; models downloaded once on demand.
 
-**The implementation is driven by `docs/PLAN.md`.** Before doing anything, read it, work in phase order, respect Verification Gates, and mark checkboxes `[x]` as you complete steps. Do not implement anything listed in its *Deferred / Out of Scope* section.
+**The implementation is driven by `docs/FEATURE_ROADMAP.md`.** Before doing anything, read it, work in phase order, respect Verification Gates, and mark checkboxes `[x]` as you complete steps. Do not implement anything listed in its *Deferred / Out of Scope* section.
 
 ## Modules
 
