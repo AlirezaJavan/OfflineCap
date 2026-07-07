@@ -1,7 +1,16 @@
 # OfflineCap
 
 [![Build](https://github.com/alirezajavan/OfflineCap/actions/workflows/build.yml/badge.svg)](https://github.com/alirezajavan/OfflineCap/actions/workflows/build.yml)
-[![Maven Central](https://img.shields.io/maven-central/v/io.github.alirezajavan/offlinecap)](https://central.sonatype.com/artifact/io.github.alirezajavan/offlinecap)
+[![API](https://img.shields.io/badge/API-26%2B-brightgreen.svg)](https://android-arsenal.com/api?level=26)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+
+[![Maven Central (offlinecap)](https://img.shields.io/maven-central/v/io.github.alirezajavan/offlinecap?label=offlinecap)](https://central.sonatype.com/artifact/io.github.alirezajavan/offlinecap)
+[![Maven Central (offlinecap-core)](https://img.shields.io/maven-central/v/io.github.alirezajavan/offlinecap-core?label=offlinecap-core)](https://central.sonatype.com/artifact/io.github.alirezajavan/offlinecap-core)
+[![Maven Central (offlinecap-audio)](https://img.shields.io/maven-central/v/io.github.alirezajavan/offlinecap-audio?label=offlinecap-audio)](https://central.sonatype.com/artifact/io.github.alirezajavan/offlinecap-audio)
+[![Maven Central (offlinecap-scribe)](https://img.shields.io/maven-central/v/io.github.alirezajavan/offlinecap-scribe?label=offlinecap-scribe)](https://central.sonatype.com/artifact/io.github.alirezajavan/offlinecap-scribe)
+[![Maven Central (offlinecap-transcribe)](https://img.shields.io/maven-central/v/io.github.alirezajavan/offlinecap-transcribe?label=offlinecap-transcribe)](https://central.sonatype.com/artifact/io.github.alirezajavan/offlinecap-transcribe)
+[![Maven Central (offlinecap-subtitle)](https://img.shields.io/maven-central/v/io.github.alirezajavan/offlinecap-subtitle?label=offlinecap-subtitle)](https://central.sonatype.com/artifact/io.github.alirezajavan/offlinecap-subtitle)
+[![Maven Central (offlinecap-lingua)](https://img.shields.io/maven-central/v/io.github.alirezajavan/offlinecap-lingua?label=offlinecap-lingua)](https://central.sonatype.com/artifact/io.github.alirezajavan/offlinecap-lingua)
 
 Offline video captioning library for Android.
 
