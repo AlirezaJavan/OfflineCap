@@ -34,14 +34,14 @@ subprojects {
             targetExclude("**/build/**/*.kt", "**/src/main/cpp/whisper/**")
             ktlint("1.5.0")
             trimTrailingWhitespace()
-            indentWithSpaces()
+            leadingTabsToSpaces()
             endWithNewline()
         }
         kotlinGradle {
             target("*.gradle.kts")
             ktlint("1.5.0")
             trimTrailingWhitespace()
-            indentWithSpaces()
+            leadingTabsToSpaces()
             endWithNewline()
         }
     }

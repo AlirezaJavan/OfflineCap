@@ -1,6 +1,15 @@
 plugins {
     id("offlinecap.android.library")
     id("offlinecap.publish")
+    idea
+}
+
+idea {
+    module {
+        // Vendored whisper.cpp sources (879 files, ~39 MB): never edited here,
+        // but IDE indexing/clangd churns through them on every sync otherwise.
+        excludeDirs.add(file("src/main/cpp/whisper"))
+    }
 }
 
 android {

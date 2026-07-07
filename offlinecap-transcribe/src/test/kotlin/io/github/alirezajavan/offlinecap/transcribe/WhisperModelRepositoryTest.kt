@@ -75,7 +75,7 @@ class WhisperModelRepositoryTest {
                 }
 
                 assertThat(lastState).isInstanceOf(ModelState.Ready::class.java)
-                val file = (lastState as ModelState.Ready).file
+                val file = lastState.file
                 assertThat(File(file.path).readText()).isEqualTo(content)
 
                 awaitComplete()

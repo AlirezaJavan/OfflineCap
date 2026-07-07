@@ -5,8 +5,8 @@ import android.media.MediaCodec
 import android.media.MediaCodecList
 import android.media.MediaExtractor
 import android.media.MediaFormat
-import android.net.Uri
 import android.util.Log
+import androidx.core.net.toUri
 import io.github.alirezajavan.offlinecap.core.engine.AudioDecoder
 import io.github.alirezajavan.offlinecap.core.model.PcmChunk
 import io.github.alirezajavan.offlinecap.core.model.PcmSpec
@@ -32,7 +32,7 @@ public class MediaCodecAudioDecoder(
         flow {
             val extractor = MediaExtractor()
             try {
-                val uri = Uri.parse(videoUri)
+                val uri = videoUri.toUri()
                 if (uri.scheme == "content") {
                     extractor.setDataSource(context, uri, null)
                 } else {
@@ -115,12 +115,12 @@ public class MediaCodecAudioDecoder(
 
                 val outputIndex = codec.dequeueOutputBuffer(bufferInfo, 10_000)
                 if (outputIndex >= 0) {
-                    if (bufferInfo.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0) {
+                    if ((bufferInfo.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
                         isCodecDone = true
                     }
 
                     val outputBuffer = codec.getOutputBuffer(outputIndex)!!
-                    val pcmData = processOutputBuffer(outputBuffer, bufferInfo, codec.outputFormat)
+                    val pcmData = processOutputBuffer(outputBuffer, bufferInfo)
 
                     // Lazy init processing components
                     if (resampler == null) {
@@ -131,15 +131,13 @@ public class MediaCodecAudioDecoder(
                     }
 
                     val monoData = mixer!!.mix(pcmData)
-                    val resampledData = resampler!!.resample(monoData)
+                    val resampledData = resampler.resample(monoData)
 
                     if (resampledData.isNotEmpty()) {
                         emit(PcmChunk(resampledData, bufferInfo.presentationTimeUs / 1000, durationMs))
                     }
 
                     codec.releaseOutputBuffer(outputIndex, false)
-                } else if (outputIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
-                    // Format changed, we handle this lazily in next output buffer
                 }
             }
         }
@@ -147,7 +145,6 @@ public class MediaCodecAudioDecoder(
     private fun processOutputBuffer(
         buffer: ByteBuffer,
         info: MediaCodec.BufferInfo,
-        format: MediaFormat,
     ): FloatArray {
         // Assume PCM_16BIT for now, which is common
         buffer.position(info.offset)

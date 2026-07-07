@@ -35,14 +35,14 @@ class CaptionPipelineTest {
 
             pipeline.execute(request).test {
                 // Wait for completion
-                var lastEvent: CaptionEvent? = null
+                var lastEvent: CaptionEvent
                 while (true) {
                     val event = awaitItem()
                     lastEvent = event
                     if (event is CaptionEvent.Completed) break
                 }
 
-                val result = (lastEvent as CaptionEvent.Completed).result
+                val result = lastEvent.result
                 assertThat(result.transcript.cues).hasSize(1)
                 assertThat(result.transcript.cues[0].text).isEqualTo("Hello world")
                 assertThat(
