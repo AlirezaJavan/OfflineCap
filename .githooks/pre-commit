@@ -1,0 +1,70 @@
+#!/bin/sh
+# OfflineCap pre-commit hook — auto-formats staged Kotlin with Spotless (ktlint).
+#
+# Whisper is never touched: the Spotless config excludes the vendored tree
+# (targetExclude "**/src/main/cpp/whisper/**"), so `spotlessApply` cannot format
+# it, and this hook also filters those paths out of the staged/re-staged lists.
+#
+# Fully-staged Kotlin files are fixed via `spotlessApply` and re-staged so the
+# commit includes the formatting. Partially-staged files (staged AND with further
+# unstaged edits) are NOT auto-fixed — re-staging them would sweep your unstaged
+# work into the commit — so those fall back to check-and-block.
+#
+# Note: `spotlessApply` formats the whole project, so other *unstaged* dirty
+# Kotlin files may also be reformatted on disk; only the staged files below are
+# re-staged, so nothing extra is added to your commit.
+#
+# Activated by the `installGitHooks` Gradle task (core.hooksPath=.githooks).
+# Bypass a single commit (not recommended): git commit --no-verify
+set -e
+
+staged=$(git diff --cached --name-only --diff-filter=ACMR |
+    grep -E '\.(kt|kts)$' |
+    grep -v 'src/main/cpp/whisper/' || true)
+
+if [ -z "$staged" ]; then
+    exit 0
+fi
+
+# Files that are staged but also carry unstaged edits.
+unstaged=$(git diff --name-only --diff-filter=ACMR |
+    grep -E '\.(kt|kts)$' |
+    grep -v 'src/main/cpp/whisper/' || true)
+
+partial=""
+for f in $staged; do
+    if [ -n "$unstaged" ] && printf '%s\n' "$unstaged" | grep -qxF "$f"; then
+        partial="$partial$f
+"
+    fi
+done
+
+if [ -x ./gradlew ]; then
+    GRADLEW=./gradlew
+else
+    GRADLEW=gradle
+fi
+
+# Safety fallback: don't auto-fix when a staged file has unstaged edits.
+if [ -n "$partial" ]; then
+    echo "OfflineCap: partially-staged file(s) — checking only (no auto-fix) to protect your unstaged edits:"
+    printf '%s' "$partial" | sed 's/^/      /'
+    if ! "$GRADLEW" spotlessCheck --quiet; then
+        echo ""
+        echo "✖ Formatting issues found. Run './gradlew spotlessApply', then re-stage."
+        echo "  Bypass (not recommended): git commit --no-verify"
+        exit 1
+    fi
+    exit 0
+fi
+
+echo "OfflineCap: auto-formatting staged Kotlin (spotlessApply)…"
+"$GRADLEW" spotlessApply --quiet
+
+# Re-stage the (now formatted) files so the fixes land in this commit. Safe here
+# because every staged file above was fully staged (no unstaged edits).
+for f in $staged; do
+    [ -e "$f" ] && git add -- "$f"
+done
+
+exit 0

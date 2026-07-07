@@ -9,6 +9,23 @@ plugins {
     alias(libs.plugins.dokka) apply false
 }
 
+// Point git at the version-controlled hook directory so the pre-commit ktlint
+// check is shared by every contributor. Idempotent; runs on any Gradle invocation.
+if (file(".git").exists()) {
+    runCatching {
+        providers
+            .exec { commandLine("git", "config", "core.hooksPath", ".githooks") }
+            .result
+            .get()
+    }
+}
+
+tasks.register<Exec>("installGitHooks") {
+    group = "git hooks"
+    description = "Activates the version-controlled .githooks pre-commit hook."
+    commandLine("git", "config", "core.hooksPath", ".githooks")
+}
+
 subprojects {
     apply(plugin = "com.diffplug.spotless")
     configure<com.diffplug.gradle.spotless.SpotlessExtension> {
