@@ -40,6 +40,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -57,6 +58,7 @@ import io.github.alirezajavan.offlinecap.core.lang.LanguageTag
 import io.github.alirezajavan.offlinecap.core.model.ModelState
 import io.github.alirezajavan.offlinecap.core.model.SubtitleCue
 import io.github.alirezajavan.offlinecap.core.model.WhisperModel
+import io.github.alirezajavan.offlinecap.core.model.WordTiming
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -144,6 +146,7 @@ private fun CaptionScreen(
             ModelCard(
                 uiState = uiState,
                 onSelectModel = viewModel::setModel,
+                onToggleWordTimestamps = viewModel::setWordTimestampsEnabled,
                 onDownload = viewModel::downloadModel,
             )
         }
@@ -284,6 +287,7 @@ private fun WhisperModel.sizeLabel(): String = "${sizeBytes / 1_000_000} MB"
 private fun ModelCard(
     uiState: UiState,
     onSelectModel: (WhisperModel) -> Unit,
+    onToggleWordTimestamps: (Boolean) -> Unit,
     onDownload: () -> Unit,
 ) {
     Card(modifier = Modifier.fillMaxWidth()) {
@@ -309,6 +313,27 @@ private fun ModelCard(
                     }
                 }
                 Spacer(modifier = Modifier.height(4.dp))
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(text = "Word-level timestamps", style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        text = "Renders per-word chips in the transcript below.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Switch(
+                    checked = uiState.wordTimestampsEnabled,
+                    onCheckedChange = onToggleWordTimestamps,
+                    enabled = !uiState.isProcessing,
+                )
             }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -490,9 +515,33 @@ private fun TranscriptCard(
                             fontFamily = FontFamily.Monospace,
                             color = MaterialTheme.colorScheme.primary,
                         )
-                        Text(text = cue.text.trim(), style = MaterialTheme.typography.bodyMedium)
+                        if (cue.words.isNotEmpty()) {
+                            WordChips(cue.words)
+                        } else {
+                            Text(text = cue.text.trim(), style = MaterialTheme.typography.bodyMedium)
+                        }
                     }
                 }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Suppress("ktlint:standard:function-naming")
+@Composable
+private fun WordChips(words: List<WordTiming>) {
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        words.forEach { word ->
+            Surface(
+                shape = RoundedCornerShape(6.dp),
+                color = MaterialTheme.colorScheme.secondaryContainer,
+            ) {
+                Text(
+                    text = word.text.trim(),
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                )
             }
         }
     }

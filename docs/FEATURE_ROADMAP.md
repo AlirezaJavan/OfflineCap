@@ -37,7 +37,7 @@ Update this table as phases complete. It is the at-a-glance index; the per-phase
 
 | # | Phase | Primary module(s) | New permissions | Status |
 |---|-------|-------------------|-----------------|--------|
-| 1 | Word-level timestamps | core, scribe, transcribe | — | ☐ Not started |
+| 1 | Word-level timestamps | core, scribe, transcribe | — | ☑ Done |
 | 2 | JSON transcript export | core, subtitle | — | ☐ Not started |
 | 3 | ASS/SSA subtitle format | core, subtitle | — | ☐ Not started |
 | 4 | Automatic source-language detection | core, scribe, transcribe | — | ☐ Not started |
@@ -65,20 +65,20 @@ tighter cue splitting, and better WebVTT. Pure data-model + engine work, no perm
 - `offlinecap-scribe/.../WhisperDecodeOptions.kt` — add `wordTimestamps: Boolean = false` flag.
 
 **Steps**
-- [ ] Add `WordTiming` model + optional `words` on the cue/segment; keep it nullable/empty-default so existing consumers are source-compatible.
-- [ ] Add `wordTimestamps` to `WhisperDecodeOptions` (default `false`, off = zero overhead).
-- [ ] Extend the JNI layer to read token timings; ensure every `Get*ArrayElements` has a matching `Release*`.
-- [ ] Populate `words` in `WhisperTranscriptionEngine` only when the flag is on.
-- [ ] **Sample app:** in the Modules tab (or Caption transcript card), when word timings are present, render the active cue with per-word chips/highlighting to prove the data flows through.
-- [ ] Unit tests: `WhisperTranscriptionEngineTest` maps a fake token stream to `WordTiming`; core model test for the new type. Use fakes from `testFixtures`, not the real native lib.
-- [ ] Bump `VERSION_OFFLINECAP_CORE`, `VERSION_OFFLINECAP_SCRIBE`, `VERSION_OFFLINECAP_TRANSCRIBE`.
+- [x] Add `WordTiming` model + optional `words` on the cue/segment; keep it nullable/empty-default so existing consumers are source-compatible.
+- [x] Add `wordTimestamps` to `WhisperDecodeOptions` (default `false`, off = zero overhead).
+- [x] Extend the JNI layer to read token timings; ensure every `Get*ArrayElements` has a matching `Release*`.
+- [x] Populate `words` in `WhisperTranscriptionEngine` only when the flag is on.
+- [x] **Sample app:** in the Modules tab (or Caption transcript card), when word timings are present, render the active cue with per-word chips/highlighting to prove the data flows through.
+- [x] Unit tests: `WhisperTranscriptionEngineTest` maps a fake token stream to `WordTiming`; core model test for the new type. Use fakes from `testFixtures`, not the real native lib.
+- [x] Bump `VERSION_OFFLINECAP_CORE`, `VERSION_OFFLINECAP_SCRIBE` (no `:offlinecap-transcribe` files changed, so its version is left untouched per CLAUDE.md versioning policy).
 
 **Verification Gate**
-- [ ] `./gradlew :offlinecap-core:test :offlinecap-transcribe:test spotlessCheck` green.
-- [ ] `./gradlew dokkaGenerate` clean (new public symbols documented).
-- [ ] Sample builds: `./gradlew :sample:assembleDebug`.
+- [x] `./gradlew :offlinecap-core:test :offlinecap-transcribe:test spotlessCheck` green.
+- [x] `./gradlew dokkaGenerate` clean (new public symbols documented).
+- [x] Sample builds: `./gradlew :sample:assembleDebug`.
 
-**Phase 1 Done:** [ ]
+**Phase 1 Done:** [x]
 
 ---
 

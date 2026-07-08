@@ -18,4 +18,10 @@ public data class WhisperDecodeOptions(
      * it judges the first pass unreliable. Disabling avoids costly retry passes.
      */
     public val temperatureFallback: Boolean = false,
+    /**
+     * Whether to request per-word timestamps from whisper.cpp and populate
+     * [io.github.alirezajavan.offlinecap.core.model.SubtitleCue.words]. Disabled by
+     * default since token-level timestamping adds decoding overhead.
+     */
+    public val wordTimestamps: Boolean = false,
 )

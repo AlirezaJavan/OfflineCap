@@ -14,7 +14,10 @@ internal object WhisperJni {
 
     /**
      * Transcribes a window of PCM samples.
-     * Returns a flat array of strings: [startMs, endMs, text, startMs, endMs, text, ...]
+     *
+     * Returns a flat, self-describing array of strings, one block per segment:
+     * `[startMs, endMs, text, wordCount, (wordStartMs, wordEndMs, wordText, wordConfidence) * wordCount, ...]`.
+     * The per-word fields are only populated when [wordTimestamps] is `true`; otherwise `wordCount` is `"0"`.
      */
     external fun transcribeWindow(
         ptr: Long,
@@ -24,6 +27,7 @@ internal object WhisperJni {
         jobId: Int,
         bestOf: Int,
         temperatureFallback: Boolean,
+        wordTimestamps: Boolean,
     ): Array<String>?
 
     external fun detectLanguage(

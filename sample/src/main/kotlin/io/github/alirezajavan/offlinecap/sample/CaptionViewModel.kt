@@ -12,6 +12,7 @@ import io.github.alirezajavan.offlinecap.core.model.CaptionRequest
 import io.github.alirezajavan.offlinecap.core.model.ModelState
 import io.github.alirezajavan.offlinecap.core.model.SubtitleCue
 import io.github.alirezajavan.offlinecap.core.model.WhisperModel
+import io.github.alirezajavan.offlinecap.scribe.WhisperDecodeOptions
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,6 +32,7 @@ data class UiState(
     val activeModel: WhisperModel? = null,
     val modelState: ModelState = ModelState.Missing,
     val targetLanguage: LanguageTag? = null,
+    val wordTimestampsEnabled: Boolean = false,
     val stage: CaptionStage = CaptionStage.IDLE,
     val extractionProgress: Float = 0f,
     val transcriptionProgress: Float = 0f,
@@ -46,7 +48,7 @@ data class UiState(
 class CaptionViewModel(
     application: Application,
 ) : AndroidViewModel(application) {
-    private var offlineCap = buildOfflineCap(WhisperModel.TINY)
+    private var offlineCap = buildOfflineCap(model = WhisperModel.TINY, wordTimestamps = false)
     private var modelObserverJob: Job? = null
     private var captioningJob: Job? = null
     private var etaTickerJob: Job? = null
@@ -62,10 +64,14 @@ class CaptionViewModel(
         observeModelState()
     }
 
-    private fun buildOfflineCap(model: WhisperModel): OfflineCap =
+    private fun buildOfflineCap(
+        model: WhisperModel,
+        wordTimestamps: Boolean,
+    ): OfflineCap =
         OfflineCap
             .Builder(getApplication())
             .transcriptionModel(model)
+            .transcriptionOptions(WhisperDecodeOptions(wordTimestamps = wordTimestamps))
             .build()
 
     private fun observeModelState() {
@@ -80,13 +86,20 @@ class CaptionViewModel(
 
     fun setModel(model: WhisperModel) {
         if (model == _uiState.value.whisperModel) return
-        offlineCap = buildOfflineCap(model)
+        offlineCap = buildOfflineCap(model, _uiState.value.wordTimestampsEnabled)
         _uiState.value = _uiState.value.copy(whisperModel = model)
         observeModelState()
     }
 
     fun setTargetLanguage(language: LanguageTag?) {
         _uiState.value = _uiState.value.copy(targetLanguage = language)
+    }
+
+    fun setWordTimestampsEnabled(enabled: Boolean) {
+        if (enabled == _uiState.value.wordTimestampsEnabled) return
+        offlineCap = buildOfflineCap(_uiState.value.whisperModel, enabled)
+        _uiState.value = _uiState.value.copy(wordTimestampsEnabled = enabled)
+        observeModelState()
     }
 
     fun downloadModel() {
