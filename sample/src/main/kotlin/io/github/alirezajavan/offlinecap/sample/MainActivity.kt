@@ -57,6 +57,7 @@ import io.github.alirezajavan.offlinecap.core.lang.LanguageTag
 import io.github.alirezajavan.offlinecap.core.model.ModelState
 import io.github.alirezajavan.offlinecap.core.model.SubtitleCue
 import io.github.alirezajavan.offlinecap.core.model.WhisperModel
+import io.github.alirezajavan.offlinecap.core.model.WordTiming
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -490,9 +491,33 @@ private fun TranscriptCard(
                             fontFamily = FontFamily.Monospace,
                             color = MaterialTheme.colorScheme.primary,
                         )
-                        Text(text = cue.text.trim(), style = MaterialTheme.typography.bodyMedium)
+                        if (cue.words.isNotEmpty()) {
+                            WordChips(cue.words)
+                        } else {
+                            Text(text = cue.text.trim(), style = MaterialTheme.typography.bodyMedium)
+                        }
                     }
                 }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Suppress("ktlint:standard:function-naming")
+@Composable
+private fun WordChips(words: List<WordTiming>) {
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        words.forEach { word ->
+            Surface(
+                shape = RoundedCornerShape(6.dp),
+                color = MaterialTheme.colorScheme.secondaryContainer,
+            ) {
+                Text(
+                    text = word.text.trim(),
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                )
             }
         }
     }

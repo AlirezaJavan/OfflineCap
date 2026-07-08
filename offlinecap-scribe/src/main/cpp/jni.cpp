@@ -67,7 +67,7 @@ Java_io_github_alirezajavan_offlinecap_scribe_WhisperJni_getProgress(
 JNIEXPORT jobjectArray JNICALL
 Java_io_github_alirezajavan_offlinecap_scribe_WhisperJni_transcribeWindow(
         JNIEnv *env, jobject thiz, jlong ptr, jfloatArray samples, jlong offset_ms, jstring lang, jint job_id,
-        jint best_of, jboolean temperature_fallback) {
+        jint best_of, jboolean temperature_fallback, jboolean word_timestamps) {
     auto *ctx = reinterpret_cast<struct whisper_context *>(ptr);
     if (!ctx) return nullptr;
 
@@ -88,6 +88,7 @@ Java_io_github_alirezajavan_offlinecap_scribe_WhisperJni_transcribeWindow(
     params.print_timestamps = false;
     params.n_threads = resolve_thread_count();
     params.greedy.best_of = best_of;
+    params.token_timestamps = word_timestamps;
     if (!temperature_fallback) {
         // A zero increment disables whisper.cpp's retry-at-higher-temperature
         // passes, which can multiply the cost of a difficult window.
@@ -144,9 +145,10 @@ Java_io_github_alirezajavan_offlinecap_scribe_WhisperJni_transcribeWindow(
     }
 
     int n_segments = whisper_full_n_segments(ctx);
-    jclass string_class = env->FindClass("java/lang/String");
-    jobjectArray result = env->NewObjectArray(n_segments * 3, string_class, nullptr);
+    whisper_token eot = whisper_token_eot(ctx);
 
+    // Flat, self-describing blocks: [startMs, endMs, text, wordCount, (wStart, wEnd, wText, wConf)*wordCount].
+    std::vector<std::string> fields;
     for (int i = 0; i < n_segments; ++i) {
         long long t0 = whisper_full_get_segment_t0(ctx, i);
         long long t1 = whisper_full_get_segment_t1(ctx, i);
@@ -155,9 +157,37 @@ Java_io_github_alirezajavan_offlinecap_scribe_WhisperJni_transcribeWindow(
         long long start_ms = offset_ms + t0 * 10;
         long long end_ms = offset_ms + t1 * 10;
 
-        env->SetObjectArrayElement(result, i * 3, env->NewStringUTF(std::to_string(start_ms).c_str()));
-        env->SetObjectArrayElement(result, i * 3 + 1, env->NewStringUTF(std::to_string(end_ms).c_str()));
-        env->SetObjectArrayElement(result, i * 3 + 2, env->NewStringUTF(text));
+        fields.push_back(std::to_string(start_ms));
+        fields.push_back(std::to_string(end_ms));
+        fields.push_back(text);
+
+        std::vector<std::string> word_fields;
+        int word_count = 0;
+        if (word_timestamps) {
+            int n_tokens = whisper_full_n_tokens(ctx, i);
+            for (int j = 0; j < n_tokens; ++j) {
+                whisper_token_data token = whisper_full_get_token_data(ctx, i, j);
+                // Skip special/control tokens (e.g. timestamp markers, EOT) - only real words remain.
+                if (token.id >= eot) continue;
+                const char *token_text = whisper_full_get_token_text(ctx, i, j);
+                if (token_text == nullptr || token_text[0] == '\0') continue;
+
+                word_fields.push_back(std::to_string(offset_ms + token.t0 * 10));
+                word_fields.push_back(std::to_string(offset_ms + token.t1 * 10));
+                word_fields.push_back(token_text);
+                word_fields.push_back(std::to_string(token.p));
+                ++word_count;
+            }
+        }
+
+        fields.push_back(std::to_string(word_count));
+        fields.insert(fields.end(), word_fields.begin(), word_fields.end());
+    }
+
+    jclass string_class = env->FindClass("java/lang/String");
+    jobjectArray result = env->NewObjectArray(static_cast<jsize>(fields.size()), string_class, nullptr);
+    for (size_t i = 0; i < fields.size(); ++i) {
+        env->SetObjectArrayElement(result, static_cast<jsize>(i), env->NewStringUTF(fields[i].c_str()));
     }
 
     env->ReleaseFloatArrayElements(samples, samples_ptr, JNI_ABORT);

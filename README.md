@@ -22,6 +22,7 @@ Video in → audio extracted → speech transcribed on-device (whisper.cpp) → 
 
 - **MediaCodec Powered**: Uses Android platform decoders for hardware-accelerated audio extraction with zero binary overhead.
 - **Whisper.cpp**: Fast, on-device speech-to-text transcription.
+- **Word-level Timestamps**: Optional per-word timing (`WhisperDecodeOptions.wordTimestamps`) for karaoke-style highlighting and tighter cue splitting.
 - **ML Kit Translate**: On-device neural machine translation.
 - **Streaming Pipeline**: Windowed processing for bounded memory usage, regardless of video length.
 - **Clean Architecture**: Pure Kotlin core logic with swappable engine implementations.

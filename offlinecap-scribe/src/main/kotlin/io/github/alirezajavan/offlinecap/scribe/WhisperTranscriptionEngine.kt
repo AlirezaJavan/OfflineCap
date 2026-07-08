@@ -7,6 +7,7 @@ import io.github.alirezajavan.offlinecap.core.lang.LanguageTag
 import io.github.alirezajavan.offlinecap.core.model.ModelFile
 import io.github.alirezajavan.offlinecap.core.model.PcmChunk
 import io.github.alirezajavan.offlinecap.core.model.SubtitleCue
+import io.github.alirezajavan.offlinecap.core.model.WordTiming
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.coroutineScope
@@ -43,6 +44,7 @@ internal interface WhisperNative {
         jobId: Int,
         bestOf: Int,
         temperatureFallback: Boolean,
+        wordTimestamps: Boolean,
     ): Array<String>?
 
     fun detectLanguage(
@@ -72,7 +74,8 @@ internal object RealWhisperNative : WhisperNative {
         jobId: Int,
         bestOf: Int,
         temperatureFallback: Boolean,
-    ) = WhisperJni.transcribeWindow(ptr, samples, offsetMs, lang, jobId, bestOf, temperatureFallback)
+        wordTimestamps: Boolean,
+    ) = WhisperJni.transcribeWindow(ptr, samples, offsetMs, lang, jobId, bestOf, temperatureFallback, wordTimestamps)
 
     override fun detectLanguage(
         ptr: Long,
@@ -159,6 +162,7 @@ public class WhisperTranscriptionEngine internal constructor(
                                         jobId = jobId,
                                         bestOf = options.greedyBestOf,
                                         temperatureFallback = options.temperatureFallback,
+                                        wordTimestamps = options.wordTimestamps,
                                     )
                                 } finally {
                                     pollJob.cancel()
@@ -172,25 +176,12 @@ public class WhisperTranscriptionEngine internal constructor(
                     )
 
                     if (results != null) {
-                        for (i in results.indices step 3) {
-                            if (i + 2 < results.size) {
-                                val startMs = results[i].toLong()
-                                val endMs = results[i + 1].toLong()
-                                // Overlapping windows (see PcmWindowing) re-transcribe the tail of the
-                                // previous window; skip segments fully inside the already-emitted range.
-                                if (startMs < lastEmittedEndMs) continue
-                                lastEmittedEndMs = maxOf(lastEmittedEndMs, endMs)
-                                send(
-                                    TranscriptionEvent.Segment(
-                                        SubtitleCue(
-                                            index = 0,
-                                            startMs = startMs,
-                                            endMs = endMs,
-                                            text = results[i + 2],
-                                        ),
-                                    ),
-                                )
-                            }
+                        for (cue in parseSegments(results)) {
+                            // Overlapping windows (see PcmWindowing) re-transcribe the tail of the
+                            // previous window; skip segments fully inside the already-emitted range.
+                            if (cue.startMs < lastEmittedEndMs) continue
+                            lastEmittedEndMs = maxOf(lastEmittedEndMs, cue.endMs)
+                            send(TranscriptionEvent.Segment(cue))
                         }
                     }
                 }
@@ -202,5 +193,37 @@ public class WhisperTranscriptionEngine internal constructor(
             nativePtr = 0L
         }
         executor.shutdown()
+    }
+
+    /**
+     * Parses the flat, self-describing native result array into cues.
+     * See [WhisperJni.transcribeWindow] for the wire format.
+     */
+    private fun parseSegments(results: Array<String>): List<SubtitleCue> {
+        val cues = mutableListOf<SubtitleCue>()
+        var i = 0
+        while (i + 3 < results.size) {
+            val startMs = results[i].toLong()
+            val endMs = results[i + 1].toLong()
+            val text = results[i + 2]
+            val wordCount = results[i + 3].toInt()
+            i += 4
+
+            val words = mutableListOf<WordTiming>()
+            repeat(wordCount) {
+                words.add(
+                    WordTiming(
+                        text = results[i + 2],
+                        startMs = results[i].toLong(),
+                        endMs = results[i + 1].toLong(),
+                        confidence = results[i + 3].toFloat(),
+                    ),
+                )
+                i += 4
+            }
+
+            cues.add(SubtitleCue(index = 0, startMs = startMs, endMs = endMs, text = text, words = words))
+        }
+        return cues
     }
 }
