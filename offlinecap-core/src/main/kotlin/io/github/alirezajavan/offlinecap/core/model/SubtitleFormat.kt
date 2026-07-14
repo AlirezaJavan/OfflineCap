@@ -6,4 +6,5 @@ package io.github.alirezajavan.offlinecap.core.model
 public enum class SubtitleFormat {
     SRT,
     WEBVTT,
+    JSON,
 }

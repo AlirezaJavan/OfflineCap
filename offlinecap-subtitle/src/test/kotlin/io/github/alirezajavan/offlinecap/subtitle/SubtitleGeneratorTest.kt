@@ -30,6 +30,14 @@ class SubtitleGeneratorTest {
     }
 
     @Test
+    fun `format renders JSON`() {
+        val json = SubtitleGenerator().format(transcript, SubtitleFormat.JSON)
+
+        assertThat(json).contains("\"text\": \"Hello world\"")
+        assertThat(json).contains("\"language\": \"en\"")
+    }
+
+    @Test
     fun `mergeCues delegates to CueMerger with the configured options`() {
         val generator = SubtitleGenerator(CueMergeOptions(maxCharsPerLine = 5, maxLines = 1))
         val rawSegments =

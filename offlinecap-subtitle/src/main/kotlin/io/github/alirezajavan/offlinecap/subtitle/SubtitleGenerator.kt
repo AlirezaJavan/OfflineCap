@@ -22,5 +22,6 @@ public class SubtitleGenerator(
         when (format) {
             SubtitleFormat.SRT -> SrtWriter()
             SubtitleFormat.WEBVTT -> WebVttWriter()
+            SubtitleFormat.JSON -> JsonTranscriptWriter()
         }.write(transcript)
 }

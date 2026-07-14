@@ -1,8 +1,11 @@
 package io.github.alirezajavan.offlinecap.core.model
 
+import kotlinx.serialization.Serializable
+
 /**
  * The timing and text of a single recognized word within a [SubtitleCue].
  */
+@Serializable
 public data class WordTiming(
     public val text: String,
     public val startMs: Long,

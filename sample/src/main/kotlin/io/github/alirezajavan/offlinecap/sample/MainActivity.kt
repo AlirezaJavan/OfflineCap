@@ -57,6 +57,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.alirezajavan.offlinecap.core.lang.LanguageTag
 import io.github.alirezajavan.offlinecap.core.model.ModelState
 import io.github.alirezajavan.offlinecap.core.model.SubtitleCue
+import io.github.alirezajavan.offlinecap.core.model.SubtitleFormat
 import io.github.alirezajavan.offlinecap.core.model.WhisperModel
 import io.github.alirezajavan.offlinecap.core.model.WordTiming
 
@@ -126,9 +127,17 @@ private fun CaptionScreen(
         ) { uri: Uri? ->
             uri?.let { viewModel.startCaptioning(it.toString()) }
         }
-    val saveSrtLauncher =
+
+    val saveSubtitleLauncher =
         rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.CreateDocument("application/x-subrip"),
+            contract =
+                ActivityResultContracts.CreateDocument(
+                    when (uiState.selectedFormat) {
+                        SubtitleFormat.SRT -> "application/x-subrip"
+                        SubtitleFormat.WEBVTT -> "text/vtt"
+                        SubtitleFormat.JSON -> "application/json"
+                    },
+                ),
         ) { uri: Uri? ->
             uri?.let { viewModel.saveSubtitle(it) }
         }
@@ -160,6 +169,7 @@ private fun CaptionScreen(
         item {
             ActionsCard(
                 uiState = uiState,
+                onSelectFormat = viewModel::setSelectedFormat,
                 onPickVideo = {
                     pickVideoLauncher.launch(
                         PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly),
@@ -182,7 +192,11 @@ private fun CaptionScreen(
                 SubtitleCard(
                     subtitleContent = content,
                     language = uiState.targetLanguage,
-                    onExport = { saveSrtLauncher.launch("captions.srt") },
+                    format = uiState.selectedFormat,
+                    onExport = {
+                        val extension = uiState.selectedFormat.name.lowercase()
+                        saveSubtitleLauncher.launch("captions.$extension")
+                    },
                 )
             }
         }
@@ -381,9 +395,11 @@ private fun ModelStateRow(
 }
 
 @Suppress("ktlint:standard:function-naming")
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ActionsCard(
     uiState: UiState,
+    onSelectFormat: (SubtitleFormat) -> Unit,
     onPickVideo: () -> Unit,
     onStop: () -> Unit,
 ) {
@@ -398,6 +414,20 @@ private fun ActionsCard(
                 )
             }
             Spacer(modifier = Modifier.height(12.dp))
+
+            Text(text = "Output Format", style = MaterialTheme.typography.labelLarge)
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                SubtitleFormat.entries.forEach { format ->
+                    FilterChip(
+                        selected = uiState.selectedFormat == format,
+                        onClick = { onSelectFormat(format) },
+                        enabled = !uiState.isProcessing,
+                        label = { Text(format.name) },
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(
                     onClick = onPickVideo,
@@ -552,6 +582,7 @@ private fun WordChips(words: List<WordTiming>) {
 private fun SubtitleCard(
     subtitleContent: String,
     language: LanguageTag?,
+    format: SubtitleFormat,
     onExport: () -> Unit,
 ) {
     Card(
@@ -559,7 +590,7 @@ private fun SubtitleCard(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            val title = if (language != null) "Subtitles (SRT · $language)" else "Subtitles (SRT)"
+            val title = if (language != null) "Subtitles ($format · $language)" else "Subtitles ($format)"
             Text(text = title, style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.height(8.dp))
             Column(
@@ -580,7 +611,7 @@ private fun SubtitleCard(
                 )
             }
             Spacer(modifier = Modifier.height(12.dp))
-            FilledTonalButton(onClick = onExport) { Text("Export SRT") }
+            FilledTonalButton(onClick = onExport) { Text("Export ${format.name}") }
         }
     }
 }

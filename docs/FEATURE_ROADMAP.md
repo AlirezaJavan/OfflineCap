@@ -38,7 +38,7 @@ Update this table as phases complete. It is the at-a-glance index; the per-phase
 | # | Phase | Primary module(s) | New permissions | Status |
 |---|-------|-------------------|-----------------|--------|
 | 1 | Word-level timestamps | core, scribe, transcribe | — | ☑ Done |
-| 2 | JSON transcript export | core, subtitle | — | ☐ Not started |
+| 2 | JSON transcript export | core, subtitle | — | ☑ Done |
 | 3 | ASS/SSA subtitle format | core, subtitle | — | ☐ Not started |
 | 4 | Automatic source-language detection | core, scribe, transcribe | — | ☐ Not started |
 | 5 | Voice-activity detection (skip silence) | core, audio | — | ☐ Not started |
@@ -93,18 +93,18 @@ Pure `:offlinecap-subtitle` work; no Android, no permissions. Pairs well with Ph
 - `offlinecap-subtitle/.../SubtitleGenerator.kt` — route `SubtitleFormat.JSON` to the new writer.
 
 **Steps**
-- [ ] Add `JSON` to `SubtitleFormat`; handle it exhaustively everywhere the enum is matched (compiler will flag the `when`s).
-- [ ] Implement `JsonTranscriptWriter` with a hand-rolled or `kotlinx.serialization` writer — if adding a dependency, declare it in `libs.versions.toml`; keep the module pure JVM (kotlinx-serialization is fine, it is not Android).
-- [ ] Include cue text, start/end ms, and (if present) word timings from Phase 1.
-- [ ] **Sample app:** add a "JSON" choice to the export format and an "Export JSON" action; wire a `CreateDocument("application/json")` launcher next to the existing SRT export.
-- [ ] Unit tests: `JsonTranscriptWriterTest` — golden-string comparison for a known transcript, including the empty-transcript edge case.
-- [ ] Bump `VERSION_OFFLINECAP_CORE`, `VERSION_OFFLINECAP_SUBTITLE`.
+- [x] Add `JSON` to `SubtitleFormat`; handle it exhaustively everywhere the enum is matched (compiler will flag the `when`s).
+- [x] Implement `JsonTranscriptWriter` with a hand-rolled or `kotlinx.serialization` writer — if adding a dependency, declare it in `libs.versions.toml`; keep the module pure JVM (kotlinx-serialization is fine, it is not Android).
+- [x] Include cue text, start/end ms, and (if present) word timings from Phase 1.
+- [x] **Sample app:** add a "JSON" choice to the export format and an "Export JSON" action; wire a `CreateDocument("application/json")` launcher next to the existing SRT export.
+- [x] Unit tests: `JsonTranscriptWriterTest` — golden-string comparison for a known transcript, including the empty-transcript edge case.
+- [x] Bump `VERSION_OFFLINECAP_CORE`, `VERSION_OFFLINECAP_SUBTITLE`.
 
 **Verification Gate**
-- [ ] `./gradlew :offlinecap-subtitle:test :offlinecap-core:test spotlessCheck` green.
-- [ ] `./gradlew :sample:assembleDebug`.
+- [x] `./gradlew :offlinecap-subtitle:test :offlinecap-core:test spotlessCheck` green.
+- [x] `./gradlew :sample:assembleDebug`.
 
-**Phase 2 Done:** [ ]
+**Phase 2 Done:** [x]
 
 ---
 
