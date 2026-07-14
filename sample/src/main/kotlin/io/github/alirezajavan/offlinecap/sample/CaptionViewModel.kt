@@ -11,6 +11,7 @@ import io.github.alirezajavan.offlinecap.core.model.CaptionEvent
 import io.github.alirezajavan.offlinecap.core.model.CaptionRequest
 import io.github.alirezajavan.offlinecap.core.model.ModelState
 import io.github.alirezajavan.offlinecap.core.model.SubtitleCue
+import io.github.alirezajavan.offlinecap.core.model.SubtitleFormat
 import io.github.alirezajavan.offlinecap.core.model.WhisperModel
 import io.github.alirezajavan.offlinecap.scribe.WhisperDecodeOptions
 import kotlinx.coroutines.Job
@@ -33,6 +34,7 @@ data class UiState(
     val modelState: ModelState = ModelState.Missing,
     val targetLanguage: LanguageTag? = null,
     val wordTimestampsEnabled: Boolean = false,
+    val selectedFormat: SubtitleFormat = SubtitleFormat.SRT,
     val stage: CaptionStage = CaptionStage.IDLE,
     val extractionProgress: Float = 0f,
     val transcriptionProgress: Float = 0f,
@@ -102,6 +104,10 @@ class CaptionViewModel(
         observeModelState()
     }
 
+    fun setSelectedFormat(format: SubtitleFormat) {
+        _uiState.value = _uiState.value.copy(selectedFormat = format)
+    }
+
     fun downloadModel() {
         viewModelScope.launch {
             offlineCap.models.download(_uiState.value.whisperModel).collect { state ->
@@ -135,6 +141,7 @@ class CaptionViewModel(
                         videoUri = videoUri,
                         sourceLanguage = LanguageTag("en"),
                         targetLanguage = _uiState.value.targetLanguage,
+                        format = _uiState.value.selectedFormat,
                     )
                 offlineCap.caption(request).collect { event ->
                     logEvent(event)

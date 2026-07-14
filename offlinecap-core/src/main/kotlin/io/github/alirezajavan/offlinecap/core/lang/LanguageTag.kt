@@ -1,9 +1,12 @@
 package io.github.alirezajavan.offlinecap.core.lang
 
+import kotlinx.serialization.Serializable
+
 /**
  * Value class representing an ISO 639-1 language tag (e.g., "en", "fa").
  */
 @JvmInline
+@Serializable
 public value class LanguageTag(
     public val code: String,
 ) {

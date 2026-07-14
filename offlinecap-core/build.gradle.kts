@@ -2,10 +2,12 @@ plugins {
     id("offlinecap.kotlin.jvm")
     id("offlinecap.publish")
     id("java-test-fixtures")
+    alias(libs.plugins.kotlin.serialization)
 }
 
 dependencies {
     implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.serialization.json)
 
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.truth)

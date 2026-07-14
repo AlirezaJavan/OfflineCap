@@ -1,8 +1,11 @@
 package io.github.alirezajavan.offlinecap.core.model
 
+import kotlinx.serialization.Serializable
+
 /**
  * A single subtitle cue with timing and text.
  */
+@Serializable
 public data class SubtitleCue(
     public val index: Int,
     public val startMs: Long,

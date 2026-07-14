@@ -1,7 +1,7 @@
 [versions]
 # Tooling
 agp = "9.2.1"
-kotlin = "2.4.0"
+kotlin = "2.4.10"
 spotless = "8.8.0"
 maven-publish = "0.37.0"
 dokka = "2.2.0"
@@ -15,6 +15,7 @@ targetSdk = "37"
 
 # Dependencies
 coroutines = "1.11.0"
+kotlinx-serialization = "1.11.0"
 mlkit-translate = "17.0.3"
 okhttp = "5.4.0"
 play-services-coroutines = "1.11.0"
@@ -37,6 +38,7 @@ kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-cor
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
 kotlinx-coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-play-services", version.ref = "play-services-coroutines" }
+kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 
 mlkit-translate = { group = "com.google.mlkit", name = "translate", version.ref = "mlkit-translate" }
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
@@ -72,6 +74,7 @@ android-library = { id = "com.android.library", version.ref = "agp" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
 maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "maven-publish" }
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
